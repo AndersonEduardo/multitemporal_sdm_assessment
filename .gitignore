@@ -1,0 +1,15 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+*.asc
+*.asci
+*.ascii
+*.tif
+*.tiff
+*.prj
+
+virtual_species_niche/
+virtual_species_range/
+utils/

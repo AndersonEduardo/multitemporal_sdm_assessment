@@ -6,12 +6,15 @@
 source("./rangeByAC.R")
 
 
-procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev, 
-                                            spsTypes, projectFolder){
+procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev){
 
   cat('[STATUS] Running `procedure_create_virtual_species`\n\n')
   
+  # capturing start time
   timeStart = Sys.time()
+  
+  # sps names
+  spsNames = c('spHW', 'spCD')
   
   ##resistance to sps moviment
   caminhosCamadasTemp = list.files(
@@ -20,14 +23,14 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
   )
   elev = mask(x=elev, mask=AmSulShape) #mask for South America
   roug = terrain(x=elev, opt='roughness', unit='degrees') #rater layer for 'roughness'
-  resfun = function(ro=roug){ 1/(1 + exp(+0.01*(ro - 200))) }
-  resdata = calc(x = roug, fun = resfun)
+  resfun = function(ro=roug){ 1/(1 + exp(+0.01*(ro - 200))) } #environmental resistance function
+  resdata = calc(x = roug, fun = resfun) #data generation
   
   ##ecological niche and its geographical projection
-  for (i in 1:3){ #length(caminhosCamadasTemp)){
+  for (i in 1:length(caminhosCamadasTemp)){
     
     cat('[STATUS] Implementing virtual species for',
-        basename(caminhosCamadasTemp[i]), 'kyr BP\n\n')
+        basename(caminhosCamadasTemp[i]), 'kyr BP...\n\n')
     
     ##predictor variables
     predictors = stack(file.path(caminhosCamadasTemp[i], 'bioclim_01.asc'),
@@ -37,7 +40,7 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
     ## scenario name
     nameScenario = basename(caminhosCamadasTemp[i])
     
-    ##function for hot and wet species (HD species)
+    ##function for hot and wet species (HW species)
     parametersHW = formatFunctions(bioclim_01=c(fun='betaFun',
                                                 p1=200,
                                                 p2=295,
@@ -67,7 +70,7 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
     
     ##stacking maps
     auxVector = stack(c(spHW$suitab.raster, spCD$suitab.raster))
-    names(auxVector) = c('spHW', 'spCD')
+    names(auxVector) = spsNames
     
     ##some adjustments and saving files
     for(j in 1:dim(auxVector)[3]){
@@ -77,7 +80,7 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
         CRS('+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0')
       
       #saving the sps distribution map
-      folderPath = file.path('./virtual_sps_niche', names(auxVector[[j]]))
+      folderPath = file.path('virtual_sps_niche', names(auxVector[[j]]))
       if(!file.exists(folderPath)){
         
         dir.create(
@@ -94,7 +97,7 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
       writeRaster(
         auxVector[[j]], 
         filename = file.path(
-                    './virtual_sps_niche',
+                    'virtual_sps_niche',
                     names(auxVector[[j]]),
                     paste(nameScenario, '.asc', sep='')
                     ),
@@ -104,20 +107,19 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
 
     }
     
-    cat('[STATUS] Virtual species for',
+    cat('[STATUS] ...virtual species for',
         basename(caminhosCamadasTemp[i]), 
         'kyr BP created.\n\n')
     
   }
   
-  ##sps occupancy of suitable areas
-  # setwd(projectFolder)
+  ##sps occupancy of suitable areas through time
+
+  for (sps in spsNames){
   
-  for (spsType in spsTypes){
-  
-    cat('[STATUS] Running for:', spsType, '\n\n')
+    cat('[STATUS] Running occupation dynamics for:', sps, '\n\n')
     
-    folderPath = file.path('./virtual_sps_range', spsType)
+    folderPath = file.path('virtual_sps_range', sps)
     if(!file.exists(folderPath)){
 
       dir.create(
@@ -132,13 +134,21 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
     }
     
     real_niche_filepaths = list.files(
-                            file.path(real_niche_folder, spsType),
+                            file.path(real_niche_folder, sps),
                             full.names=TRUE, 
                             pattern='.asc'
                           )
 
+    # defining the last temporal layer as start temporal 
+    # point for occupation dynamics
     sps_range = rangeByAC(
-      envAreas = raster(real_niche_filepaths[grep('002.asc', real_niche_filepaths)]),
+      # envAreas = raster(
+      #               real_niche_filepaths[
+      #                 grep('120.asc', real_niche_filepaths)
+      #                 ]),
+      envAreas = raster(
+                      real_niche_filepaths[length(real_niche_filepaths)]
+                 ),
       movRes = resdata,
       sps_range = NULL
       ) # assuming start at 120 kyrBP
@@ -147,7 +157,8 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
     for (real_niche_filepath in real_niche_filepaths){
 
       kyrbp = gsub('.asc', '', basename(real_niche_filepath))
-      cat('[STATUS] Running for sps', spsType, 'at', kyrbp, 'KyrBP...')
+      cat('[STATUS] Running occupation dynamics for sps', 
+          sps, 'at', kyrbp, 'KyrBP...\n\n')
       
       niche_proj = raster(real_niche_filepath)
   
@@ -160,26 +171,21 @@ procedure_create_virtual_species = function(envVarFolder, AmSulShape, elev,
       writeRaster(
         range, 
         filename = file.path(
-                      projectFolder,
                       'virtual_sps_range', 
-                      spsType, 
+                      sps, 
                       paste(kyrbp, '.asc', sep='')
                     ),
         overwrite = TRUE,
         prj = TRUE
       )
       
-      cat('done.\n\n')
-
+      cat('[STATUS] ...done.\n\n' )
+      
     }
   }
   
   timeEnd = Sys.time()
 
-  cat('[STATUS] Simulations finished after', 
-      as.numeric(difftime(timeEnd, timeStart, unit='secs')),
-      'seconds', 
-      '\n\n')
-  cat('[STATUS] `procedure_create_virtual_species` concluded.\n\n')
+  cat('[STATUS] `procedure_create_virtual_species` concluded. (latency', as.numeric(difftime(timeEnd, timeStart, unit='secs')), 'seconds)\n\n')
   
 }

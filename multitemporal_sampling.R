@@ -4,64 +4,142 @@
 ######################################################################
 
 
-multitemporal_sampling = function(){
+procedure_multitemporal_sampling = function(spsNames, sampleSizes, NumRep, 
+                                            envVarFolder, bgPoints){
   
-  ##dataframes to store occurrence data
+  
+  cat('[STATUS] Running `procedure_multitemporal_sampling`\n\n')
+  
+  # capturing start time
+  timeStart = Sys.time()
+  
+  ##dataframes for storing occurrence data
   sampleData = data.frame()
   sampleDataBG = data.frame()
   
-  for (i in 1:length(spsTypes)){ #loop on species
+  for (i in 1:length(spsNames)){ #loop on species
     
     ##creating the directory structure
-    if(!file.exists(paste(projectFolder,'/samples','/multitemporal/',spsTypes[i],sep=''))){
-      dir.create(paste(projectFolder,'/samples','/multitemporal/',spsTypes[i],sep=''),recursive=TRUE)}
-    
-    for (sSize in sampleSizes){ #loop on sample sizes
+    folderPath = file.path('samples/multitemporal', spsNames[i])
+    if(!file.exists(folderPath)){
       
-      sampledAges = vector()
-      sampledAges = round(runif(sSize,0,Tmax)) #selecting 'n' time layers
-      rangeRealFolder = paste(projectFolder,'/RangeReal/',spsTypes[i],sep='') #folder with real sps distribution
+      dir.create(
+        folderPath,
+        recursive=TRUE
+      )
+      
+      cat('[STATUS] Directory created:', 
+          folderPath,
+          '\n\n')
+      
+    }
+    
+    for (sSize in sampleSizes){ #loop over sample sizes
+      
+      rangeRealFolder = file.path('virtual_sps_range', spsNames[i]) #folder with real sps distribution
       rangeRealPath = list.files(path=rangeRealFolder, full.names=TRUE, pattern='.asc') #address list
       
-      for (j in 1:NumRep){ #loop on replicates for sampling scenarios
+      sampledAges = vector()
+      sampledAges = round(runif(sSize, 1, length(rangeRealPath))) #selecting 'n' time layers
+      
+      for (j in 1:NumRep){ #loop over replicates for sampling scenarios
         
         for (sAge in unique(sampledAges)){ #sampling at each time layer in the sample
           
-          ## occ pts
+          cat('[STATUS] Sampling virtual species occurrences `', spsNames[i], 
+              '`, sample size `', sSize, 
+              '`, replicate `', j, 
+              '`, and `', sAge,'th` age layer...\n\n', sep='')
           
-          sampleData_i = dismo::randomPoints(mask=raster(rangeRealPath[sAge+1])>0.2,prob=TRUE, n=sum(sAge==sampledAges)) #sampling point
-          scenarioName = basename(rangeRealPath[1:24][sAge+1]) #time linked to the scenario for environmental variables
-          scenarioName = gsub('.asc','',scenarioName) #removing '.asc' from the name
+          ## occ pts ##
+          
+          sampleData_i = dismo::randomPoints(
+                                  mask=raster(rangeRealPath[sAge]) > 0.2, 
+                                  prob=TRUE, 
+                                  n=sum(sAge==sampledAges)
+                         ) #sampling point
+          scenarioName = basename(rangeRealPath[sAge]) #time linked to the scenario for environmental variables
+          scenarioName = gsub('.asc','', scenarioName) #removing '.asc' from the name
           layers_i = extract(
-            x=stack(list.files(path=paste(envVarFolder,'/',scenarioName,sep=''), pattern='bioclim', full.names=TRUE)),
-            y=sampleData_i) #extracting environmental variables from the point in its respective time layer
+            x=stack(
+                list.files(
+                  path=file.path(envVarFolder, scenarioName),
+                  pattern='bioclim',
+                  full.names=TRUE
+                )
+            ),
+            y=sampleData_i
+          ) #extracting environmental variables from the point in its respective time layer
           sampleData = rbind(sampleData, cbind(sampleData_i,layers_i,sAge)) #together with the data from the other time layers sampled
           
-          ## background points
+          ## background points ##
           
-          envVarPath = list.files(path=envVarFolder, full.names=TRUE)[sAge+1] #list of the environmental variables at the time corresponding to the interaction
-          envData = list.files(envVarPath, full.names=TRUE, pattern='bioclim')
-          sampleDataBG_i = dismo::randomPoints(mask=raster(envData[1], crs='+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0'),
-                                               n=sum(sAge==sampledAges)*(round(bgPoints/length(sampledAges)))) #sampling points
-          scenarioName = list.files(path=paste(envVarFolder))[sAge+1] #scenario name
+          envVarPath = list.files(
+                        path=envVarFolder, 
+                        full.names=TRUE
+                       )[sAge] #list of the environmental variables at the time corresponding to the interaction
+          envData = list.files(
+                      envVarPath, 
+                      full.names=TRUE, 
+                      pattern='bioclim'
+                    )
+          sampleDataBG_i = dismo::randomPoints(
+                                mask=raster(
+                                      envData[1], 
+                                      crs='+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0'
+                                ),
+                                n=sum(sAge==sampledAges)*(round(bgPoints/length(sampledAges)))
+                            ) #sampling points
+          scenarioName = list.files(path=paste(envVarFolder))[sAge] #scenario name
           layersBG_i = extract(
-            x=stack(list.files(path=paste(envVarFolder,'/',scenarioName,sep=''), pattern='asc', full.names=TRUE)),
-            y=sampleDataBG_i) #extracting environmental variables from the point in its respective time layer
-          sampleDataBG = rbind(sampleDataBG, data.frame(lon=sampleDataBG_i[,1],lat=sampleDataBG_i[,2],layersBG_i,kyrBP=sAge)) #gathering data from the time layers sampled
+            x=stack(
+              list.files(
+                path=file.path(envVarFolder, scenarioName),
+                pattern='asc', 
+                full.names=TRUE
+              )
+            ),
+            y=sampleDataBG_i
+          ) #extracting environmental variables from the point in its respective time layer
+          sampleDataBG = rbind(
+                          sampleDataBG, 
+                          data.frame(
+                            lon=sampleDataBG_i[,1],
+                            lat=sampleDataBG_i[,2],
+                            layersBG_i,
+                            kyrBP=sAge
+                          )
+                        ) #gathering data from the time layers sampled
+
+          cat('[STATUS] ...done.\n\n' )
           
         }
         
-        ## occ pts
+        ## occ pts ##
         names(sampleData) = c('lon', 'lat', names(as.data.frame(layers_i)), 'kyrBP') #adjusting the names
-        write.csv(sampleData,paste(projectFolder,'/samples/multitemporal/',spsTypes[i],'/occ_',sSize,'pts_multitemporal_', j ,'rep.csv',sep=''),row.names=FALSE) #saving
+        write.csv(
+          sampleData, 
+          file.path('samples/multitemporal', spsNames[i], paste('occ_', sSize, 'pts_multitemporal_rep', j, '.csv', sep='')),
+          row.names=FALSE
+        ) #saving
         sampleData = data.frame() #returning empty data.frame for the next iteration
         
-        ## background pts
-        names(sampleDataBG) = c('lon','lat',names(as.data.frame(layersBG_i)),'kyrBP') #adjusting the names
-        write.csv(sampleDataBG,paste(projectFolder,'/samples/multitemporal/',spsTypes[i],'/bg_',sSize,'pts_multitemporal_', j ,'rep.csv',sep=''),row.names=FALSE) #saving
+        ## background pts ##
+        names(sampleDataBG) = c('lon', 'lat', names(as.data.frame(layersBG_i)), 'kyrBP') #adjusting the names
+        write.csv(
+          sampleDataBG,
+          file.path('samples/multitemporal', spsNames[i], paste('bg_', sSize, 'pts_multitemporal_rep', j, '.csv', sep='')),
+          row.names=FALSE
+        ) #saving
         sampleDataBG = data.frame() #returning empty data.frame for the next iteration
-        
       }
     }
   }
+  
+  timeEnd = Sys.time()
+  
+  cat('[STATUS] Multitemporal sampling virtual species occurrences finished. (latency', 
+       as.numeric(difftime(timeEnd, timeStart, unit='secs')), 
+      'seconds)\n\n')
+
 }

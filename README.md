@@ -8,6 +8,8 @@ For the fully reproduction of our results, please dowload the full climate data,
 
 The conceptual description of the experiment pipeline is depicted in the following figure.
 
-![Experiment pipeline](/assets/fig01_artificial_sps_large.jpg "Experiment pipeline")
+<!-- ![Experiment pipeline](/assets/fig01_artificial_sps_large.jpg "Experiment pipeline") -->
+
+<center><img src=./assets/fig01_artificial_sps_large.jpg alt="Experiment pipeline" width="400"></center>
 
 Have a happy coding. :abacus:

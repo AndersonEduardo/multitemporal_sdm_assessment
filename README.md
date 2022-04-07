@@ -11,7 +11,7 @@ The conceptual description of the experiment pipeline is depicted in the followi
 <!-- ![Experiment pipeline](/assets/fig01_artificial_sps_large.jpg "Experiment pipeline") -->
 
 <div align="center">
-<img src=./assets/fig01_artificial_sps_large.jpg width="700">
+<img src=./assets/fig01_artificial_sps_large.jpg width="900">
 </div>
 
 Have a happy coding. :abacus:

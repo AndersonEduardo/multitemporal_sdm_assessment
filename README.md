@@ -14,4 +14,8 @@ The conceptual description of the experiment pipeline is depicted in the followi
 <center><img src=./assets/fig01_artificial_sps_large.jpg alt="Experiment pipeline" width="400"></center>
 </p>
 
+<div align="center">
+<img src=./assets/fig01_artificial_sps_large.jpg>
+</div>
+
 Have a happy coding. :abacus:

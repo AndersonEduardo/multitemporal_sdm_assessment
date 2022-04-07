@@ -55,21 +55,17 @@ procedure_monotemporal_sampling = function(spsNames, sampleSizes, NumRep,
 
         #selecting the time layer randomly
         sampledAge = round(runif(1, 1, length(nicheRealPath)))
+        scenarioName = gsub('.asc', '', basename(nicheRealPath[sampledAge]))
+        projectionAge = as.numeric(scenarioName)
         
-        cat('[STATUS] sampled age:', sampledAge, 'kyrBP.')
+        cat('[STATUS] sampled age:', projectionAge, 'kyrBP.')
 
         #sampling point
         sampleData_i = dismo::randomPoints(
                           mask=raster(nicheRealPath[sampledAge]) > 0.2, 
                           prob=TRUE, 
                           n=sSize
-                        ) 
-        
-        #time for environmental variables
-        scenarioName = basename(nicheRealPath[sampledAge])
-        
-        #removing '.asc' from the name
-        scenarioName = gsub('.asc', '', scenarioName)
+                        )
         
         #extracting environmental variables from the point in its respective time layer
         layers_i = extract(
@@ -86,7 +82,7 @@ procedure_monotemporal_sampling = function(spsNames, sampleSizes, NumRep,
         #gathering data from the time layers sampled
         sampleData = rbind(
                       sampleData, 
-                      cbind(sampleData_i,layers_i,sampledAge)
+                      cbind(sampleData_i,layers_i,projectionAge)
                      )
         
         #adjusting the names
@@ -127,7 +123,7 @@ procedure_monotemporal_sampling = function(spsNames, sampleSizes, NumRep,
                           lon=sampleDataBg_i[,1],
                           lat=sampleDataBg_i[,2],
                           layersBg_i,
-                          kyrBP=sampledAge
+                          kyrBP=projectionAge
                         )
                       ) #gathering data from the time layers sampled
         names(sampleDataBg) = c('lon', 'lat', names(as.data.frame(layersBg_i)), 'kyrBP') #ajusting names

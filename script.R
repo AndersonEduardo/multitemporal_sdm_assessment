@@ -13,6 +13,33 @@ library(phyloclim)
 # library(SDMTools)
 
 
+#########################################################
+#### BEFORE BEGINING: setting up project file system ####
+#########################################################
+
+# Hint: make sure your R-session is set to a convenient 
+# folder for the project
+
+folders = c('climate_data', 'results', 'models', 'samples', 
+            'virtual_sps_niche', 'virtual_sps_range')
+
+for (folder in folders){
+  
+  if(!file.exists(folder)){
+    
+    dir.create(
+      folder,
+      recursive=TRUE
+    )
+    
+    cat('[STATUS] Directory created:', 
+        folder,
+        '\n\n')
+    
+  }
+}
+
+
 ##############################################
 #### FIRST PART: creating virtual species ####
 ##############################################
@@ -46,10 +73,10 @@ procedure_create_virtual_species(
 envVarFolder = "climate_data" #folder with environmental gridfiles
 spsNames = c('spHW', 'spCD') #species names
 sampleSizes = c(10, 50, 100) #scenarios for sample size
-NumRep = 5 #number of replicates (for each scenario implemented)
+NumRep = 3 #number of replicates (for each scenario implemented)
 bgPoints = 10000 #number of background points
 
-# # FORT A MINIMAL EXAMPLE USE IT #
+# # FOR A MINIMAL EXAMPLE, UNCOMMENT AND USE THESE PARAMETERS #
 # sampleSizes = c(10)
 # NumRep = 2
 # #
@@ -98,11 +125,11 @@ maxentFolder = 'maxent' #pasta para resultados do maxent
 spsNames = c('spHW','spCD') #c('spHW', 'spHD', 'spCD') #nomes das especies
 sdmTypes = c('multitemporal','monotemporal')
 sampleSizes = c(10,50,100) #tamanhos das amostras
-NumRep = 5 #numero de replicas (de cada cenario amostral)
+NumRep = 3 #numero de replicas (de cada cenario amostral)
 Tmax = 22
 mainProjectFolder = getwd()
 
-# # FORT A MINIMAL EXAMPLE USE IT #
+# # FOR A MINIMAL EXAMPLE, UNCOMMENT AND USE THESE PARAMETERS #
 # sampleSizes = c(10)
 # NumRep = 2
 # Tmax = 1
@@ -118,7 +145,6 @@ procedure_sdm(
   sdmTypes     = sdmTypes, 
   spsNames     = spsNames, 
   envVarFolder = envVarFolder, 
-  Tmax         = Tmax,
   maxentFolder = maxentFolder
 
 )
@@ -137,14 +163,12 @@ AmSulShape = rgdal::readOGR("utils/Am_Sul/borders.shp") #shape da America do Sul
 maxentFolder = 'maxent' #pasta para resultados do maxent
 spsNames = c('spHW', 'spCD') #c('spHW', 'spHD', 'spCD') #nomes das especies
 sdmTypes = c('multitemporal', 'monotemporal')
-sampleSizes = c(10, 100) #c(5,10,20,40,80,160) #tamanhos das amostras
-NumRep = 5 #numero de replicas (de cada cenario amostral)
-Tmax = 22
+sampleSizes = c(10,50,100) #c(5,10,20,40,80,160) #tamanhos das amostras
+NumRep = 3 #numero de replicas (de cada cenario amostral)
 
-# # FORT A MINIMAL EXAMPLE USE IT #
+# # FOR A MINIMAL EXAMPLE, UNCOMMENT AND USE THESE PARAMETERS #
 # sampleSizes = c(10)
 # NumRep = 2
-# Tmax = 1
 # #
 
 # loading the procedure
@@ -158,8 +182,6 @@ procedure_for_comparing_models(
   sampleSizes  = sampleSizes, 
   NumRep       = NumRep,
   envVarFolder = envVarFolder,
-  AmSulShape   = AmSulShape,
-  Tmax         = Tmax
+  AmSulShape   = AmSulShape
 
 )
-

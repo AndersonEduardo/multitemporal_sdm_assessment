@@ -10,8 +10,7 @@ library(ecospat)
 options(java.parameters = "-Xmx7g") ###set available memmory to java
 
 procedure_for_comparing_models = function(sdmTypes, spsNames, sampleSizes, 
-                                          NumRep, envVarFolder, AmSulShape, 
-                                          Tmax){
+                                          NumRep, envVarFolder, AmSulShape){
   
   cat('[STATUS] Running `procedure_for_comparing_models`\n\n')
   
@@ -50,10 +49,10 @@ procedure_for_comparing_models = function(sdmTypes, spsNames, sampleSizes,
                         full.names=TRUE
                       )
       
-      for (l in 1:length(nicheRealPath[1:Tmax])){ #loop on time layers
+      for (l in 1:length(nicheRealPath)){ #loop on time layers
         
         #real distribution
-        realNiche = nicheRealPath[l] 
+        realNiche = nicheRealPath[l]
         
         ##sampling points of the real distribution for the purchase of SDMs
         binMap = raster(realNiche) > 0.2 #binary map of the real
@@ -102,13 +101,14 @@ procedure_for_comparing_models = function(sdmTypes, spsNames, sampleSizes,
                   '...\n\n',
                   sep='')
               
+              projectionAge = gsub('.asc', '', basename(nicheRealPath[l]))
               sdmNichePath = file.path(
                 'models',
                 sdmTypes[h],
                 spsNames[i],
                 paste(spsNames[i], '.sample', m, '.replicate', n, sep=''),
-                paste('proj_', l-1, 'kyr', sep=''),
-                paste('proj_', l-1, 'kyr_', spsNames[i], '.sample', m, '.replicate', n, '_TSSbin.grd', sep='')
+                paste('proj_', projectionAge, 'kyr', sep=''),
+                paste('proj_', projectionAge, 'kyr_', spsNames[i], '.sample', m, '.replicate', n, '_TSSbin.grd', sep='')
               )
               
               # sdmNichePath = paste(
@@ -262,7 +262,7 @@ procedure_for_comparing_models = function(sdmTypes, spsNames, sampleSizes,
                 data.frame(
                   sdmType              = sdmTypes[h],
                   sp                   = spsNames[i],
-                  kyrBP                = l-1,
+                  kyrBP                = as.numeric(projectionAge),
                   sampleSize           = m,
                   replicate            = n,
                   numbOfTimeLayers     = length(unique(occPoints$kyrBP)),

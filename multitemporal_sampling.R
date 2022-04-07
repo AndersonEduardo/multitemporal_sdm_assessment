@@ -44,22 +44,24 @@ procedure_multitemporal_sampling = function(spsNames, sampleSizes, NumRep,
       
       for (j in 1:NumRep){ #loop over replicates for sampling scenarios
         
-        for (sAge in unique(sampledAges)){ #sampling at each time layer in the sample
-          
-          cat('[STATUS] Sampling virtual species occurrences `', spsNames[i], 
-              '`, sample size `', sSize, 
-              '`, replicate `', j, 
-              '`, and `', sAge,'th` age layer...\n\n', sep='')
+        for (sampledAge in unique(sampledAges)){ #sampling at each time layer in the sample
           
           ## occ pts ##
           
           sampleData_i = dismo::randomPoints(
-                                  mask=raster(rangeRealPath[sAge]) > 0.2, 
+                                  mask=raster(rangeRealPath[sampledAge]) > 0.2, 
                                   prob=TRUE, 
-                                  n=sum(sAge==sampledAges)
+                                  n=sum(sampledAge==sampledAges)
                          ) #sampling point
-          scenarioName = basename(rangeRealPath[sAge]) #time linked to the scenario for environmental variables
-          scenarioName = gsub('.asc','', scenarioName) #removing '.asc' from the name
+          scenarioName = gsub('.asc','', basename(rangeRealPath[sampledAge])) #time linked to the scenario for environmental variables
+          projectionAge = as.numeric(scenarioName)
+          
+          cat('[STATUS] Sampling virtual species occurrences `', spsNames[i], 
+              '`, sample size `', sSize, 
+              '`, replicate `', j, 
+              '`, and `', projectionAge,'` kyr BP...\n\n', sep='')
+          
+          
           layers_i = extract(
             x=stack(
                 list.files(
@@ -70,14 +72,14 @@ procedure_multitemporal_sampling = function(spsNames, sampleSizes, NumRep,
             ),
             y=sampleData_i
           ) #extracting environmental variables from the point in its respective time layer
-          sampleData = rbind(sampleData, cbind(sampleData_i,layers_i,sAge)) #together with the data from the other time layers sampled
+          sampleData = rbind(sampleData, cbind(sampleData_i,layers_i,projectionAge)) #together with the data from the other time layers sampled
           
           ## background points ##
           
           envVarPath = list.files(
                         path=envVarFolder, 
                         full.names=TRUE
-                       )[sAge] #list of the environmental variables at the time corresponding to the interaction
+                       )[sampledAge] #list of the environmental variables at the time corresponding to the interaction
           envData = list.files(
                       envVarPath, 
                       full.names=TRUE, 
@@ -88,9 +90,9 @@ procedure_multitemporal_sampling = function(spsNames, sampleSizes, NumRep,
                                       envData[1], 
                                       crs='+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0'
                                 ),
-                                n=sum(sAge==sampledAges)*(round(bgPoints/length(sampledAges)))
+                                n=sum(sampledAge==sampledAges)*(round(bgPoints/length(sampledAges)))
                             ) #sampling points
-          scenarioName = list.files(path=paste(envVarFolder))[sAge] #scenario name
+
           layersBG_i = extract(
             x=stack(
               list.files(
@@ -101,13 +103,14 @@ procedure_multitemporal_sampling = function(spsNames, sampleSizes, NumRep,
             ),
             y=sampleDataBG_i
           ) #extracting environmental variables from the point in its respective time layer
+
           sampleDataBG = rbind(
                           sampleDataBG, 
                           data.frame(
                             lon=sampleDataBG_i[,1],
                             lat=sampleDataBG_i[,2],
                             layersBG_i,
-                            kyrBP=sAge
+                            kyrBP=projectionAge
                           )
                         ) #gathering data from the time layers sampled
 

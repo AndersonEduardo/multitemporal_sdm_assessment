@@ -9,7 +9,7 @@ library(biomod2)
 options(java.parameters = "-Xmx7g") ###set available memmory to java
 
 
-procedure_sdm = function(sdmTypes, spsNames, envVarFolder, Tmax, maxentFolder){
+procedure_sdm = function(sdmTypes, spsNames, envVarFolder, maxentFolder){
   
   cat('[STATUS] Running `procedure_monotemporal_sampling`\n\n')
   
@@ -45,6 +45,14 @@ procedure_sdm = function(sdmTypes, spsNames, envVarFolder, Tmax, maxentFolder){
 
         for (k in 1:NumRep){ #loop on replicates
           tryCatch({
+            
+            cat('[STATUS] Running for ', 
+                sdmTypes[h] , 'sampling',
+                'sps', spsNames[i],
+                'sample size', sampleSizes[j],
+                'and replicate', NumRep,
+                '...\n\n',
+                sep='')
             
             ##adjusting directory
             setwd(mainfolderPath)
@@ -173,7 +181,7 @@ procedure_sdm = function(sdmTypes, spsNames, envVarFolder, Tmax, maxentFolder){
             )
 
             ##implementing model projections
-            for (l in 1:length(envVarPaths[1:Tmax])){
+            for (l in 1:length(envVarPaths)){
               
               ##local parameters and local variables
               predictors = stack(
@@ -199,21 +207,25 @@ procedure_sdm = function(sdmTypes, spsNames, envVarFolder, Tmax, maxentFolder){
                           )
 
               ##runing projection algorithm
+              projectionAge = basename(envVarPaths[l])
+
               myBiomodProj = BIOMOD_Projection(
                 modeling.output     = myBiomodModelOut,
                 new.env             = predictors,
-                proj.name           = paste(l-1,'kyr',sep=''),
+                proj.name           = paste(projectionAge, 'kyr', sep=''),
                 selected.models     = modelName,
                 binary.meth         = 'TSS',
                 compress            = 'TRUE',
                 build.clamping.mask = 'TRUE',
                 output.format       = '.grd'
               )
-              
+
             }
             
             # back to models directory
             setwd(mainfolderPath)
+            
+            cat('[STATUS] ...done.\n\n')
 
           }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         }

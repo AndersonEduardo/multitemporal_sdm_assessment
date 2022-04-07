@@ -10,12 +10,8 @@ The conceptual description of the experiment pipeline is depicted in the followi
 
 <!-- ![Experiment pipeline](/assets/fig01_artificial_sps_large.jpg "Experiment pipeline") -->
 
-<p align="center" width="100%">
-<center><img src=./assets/fig01_artificial_sps_large.jpg alt="Experiment pipeline" width="400"></center>
-</p>
-
 <div align="center">
-<img src=./assets/fig01_artificial_sps_large.jpg>
+<img src=./assets/fig01_artificial_sps_large.jpg width="700">
 </div>
 
 Have a happy coding. :abacus:

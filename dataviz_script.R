@@ -10,14 +10,6 @@ outputData = list() #tabela de dados de saida
 vetor.nomes = vector()
 projectFolder = getwd() #pasta do projeto
 
-##My notebook###############
-##spsTypes = c('spHW', 'spCD') #c('spHW', 'spHD', 'spCD') #nomes das especies
-##outputData = list() #tabela de dados de saida
-##vetor.nomes = vector()
-##projectFolder = "/home/anderson/Projetos/Sps artificiais" #pasta do projeto
-#projectFolder = '/media/anderson/PIBi/ANDERSON EDUARDO/Sps artificiais'
-############################
-
 
 ### AUC and TSS of the models
 
